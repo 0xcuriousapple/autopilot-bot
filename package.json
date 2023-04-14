@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/abhishekvispute/autopilot-bot/issues"
   },
-  "homepage": "https://github.com/abhishekvispute/autopilot-bot#readme"
+  "homepage": "https://github.com/abhishekvispute/autopilot-bot#readme",
+  "dependencies": {
+    "@account-abstraction/sdk": "^0.5.0",
+    "ethers": "5.6.0"
+  }
 }
