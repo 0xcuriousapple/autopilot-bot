@@ -32,8 +32,8 @@ https://www.jiffyscan.xyz/userOpHash/0xe36c42eb1ee4846289d63114ec53c2993090e43fb
 :warning: Dont install node modules yourself, we had to override one node module here
 
 ## How it works
-1- imports exported nodes from import.json
-2- for now it only runs erc20 transfer
-3- it encodes transer call and creates a bot-signed userOp from that
-4- account-abstraction sdk is overwritten to return user account as target, instead of getting that from the signer
-5- signed userOp is sent to bundler
+1- imports exported nodes from import.json </br>
+2- for now it only runs erc20 transfer </br>
+3- it encodes transer call and creates a bot-signed userOp from that </br>
+4- account-abstraction sdk is overwritten to return user account as target, instead of getting that from the signer  </br>
+5- signed userOp is sent to bundler </br>
