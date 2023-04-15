@@ -1,0 +1,18 @@
+[
+
+    {
+        "owner" :"0x9988EA9Cfd976ea363472713177181a61e83860f", 
+        "account" : "0xe670d4245f776ef9a0f3278a57ad11da5f8cbe67",
+        "triggerSeconds": "",
+        "actions": [ 
+            {
+                "dest": "0x0633335153E53e77588E373dEa3E5110d918f54D",
+                "value": "2",
+                "calldata": ""
+            }
+        ],
+        "timegapSeconds": 20, 
+        "allowance": 2
+    }
+]
+
