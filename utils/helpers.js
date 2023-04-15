@@ -1,5 +1,7 @@
 import { ethers } from "ethers";
 import { HttpRpcClient } from "@account-abstraction/sdk/dist/src/HttpRpcClient.js";
+import { getSimpleAccount } from "./simpleAccount.js";
+
 import AutoPilotABI from "../abi/AutoPilot.json" assert { type: "json" };
 const getHttpRpcClient = async (provider, bundlerUrl, entryPointAddress) => {
   const chainId = await provider.getNetwork().then((net) => net.chainId);
@@ -43,4 +45,47 @@ const getGasFee = async (provider) => {
 
   return { maxFeePerGas, maxPriorityFeePerGas };
 };
-export { toJSON, printOp, getGasFee, getHttpRpcClient };
+
+const getAddress = async (provider) => {
+  const accountAPI = getSimpleAccount(
+    provider,
+    process.env.botPrivateKey,
+    process.env.entryPoint,
+    process.env.simpleAccountFactory
+  );
+  const address = await accountAPI.getCounterFactualAddress();
+  return address;
+};
+
+const transfer = async (t, amt, provider) => {
+  const accountAPI = getSimpleAccount(
+    provider,
+    process.env.botPrivateKey,
+    process.env.entryPoint,
+    process.env.simpleAccountFactory
+  );
+
+  const target = ethers.utils.getAddress(t);
+  const value = ethers.utils.parseEther(amt);
+  const op = await accountAPI.createSignedUserOp({
+    target,
+    value,
+    data: "0x",
+    ...(await getGasFee(provider)),
+  });
+  console.log(`Signed UserOperation: ${await printOp(op)}`);
+
+  const client = await getHttpRpcClient(
+    provider,
+    process.env.bundlerUrl,
+    process.env.entryPoint
+  );
+  const uoHash = await client.sendUserOpToBundler(op);
+  console.log(`UserOpHash: ${uoHash}`);
+
+  console.log("Waiting for transaction...");
+  const txHash = await accountAPI.getUserOpReceipt(uoHash);
+  console.log(`Transaction hash: ${txHash}`);
+};
+
+export { toJSON, printOp, getGasFee, getHttpRpcClient, transfer, getAddress };

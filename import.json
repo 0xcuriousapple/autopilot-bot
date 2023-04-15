@@ -1,0 +1,38 @@
+{
+  "nodes": [
+    {
+      "id": "START",
+      "position": { "x": 200, "y": 200 },
+      "data": { "label": "Start" },
+      "width": 150,
+      "height": 40
+    },
+    {
+      "id": "END",
+      "position": { "x": 200, "y": 500 },
+      "data": { "label": "End" },
+      "width": 150,
+      "height": 40
+    },
+    {
+      "id": "CUSTOM_NODE0xa9059cbb",
+      "position": { "x": 350, "y": 350 },
+      "type": "CUSTOM_NODE",
+      "data": {
+        "chainId": 10,
+        "label": "transfer",
+        "value": "0x0",
+        "target": "0x326c977e6efc84e512bb9c30f76e30c160ed06fb",
+        "functionName": "transfer",
+        "params": [
+          "0xf711fa6aA31e39b2C5d776A0F408526174C0cd2d",
+          { "type": "BigNumber", "hex": "0x038d7ea4c68000" }
+        ],
+        "functionSelector": "0xa9059cbb"
+      },
+      "width": 351,
+      "height": 98
+    }
+  ],
+  "edges": []
+}

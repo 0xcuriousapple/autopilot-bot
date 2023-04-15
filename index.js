@@ -1,93 +1,80 @@
 import { BigNumber, ethers } from "ethers";
 import { getSimpleAccount } from "./utils/simpleAccount.js";
-import { getHttpRpcClient, getGasFee, printOp } from "./utils/helpers.js"
+import {
+  getHttpRpcClient,
+  getGasFee,
+  printOp,
+  getAddress,
+} from "./utils/helpers.js";
 import { HttpRpcClient } from "@account-abstraction/sdk/dist/src/HttpRpcClient.js";
+import imported from "./import.json" assert { type: "json" };
 import AutoPilotABI from "./abi/AutoPilot.json" assert { type: "json" };
-import config from "./config.json" assert {type: "json"};
+import config from "./config.json" assert { type: "json" };
 
 import * as dotenv from "dotenv";
-dotenv.config()
+dotenv.config();
 
-const main = async() =>
-{
-console.log("hi");
-console.log(process.env.rpcUrl);
-console.log(Date.now());
+export const ERC20_ABI = [
+  // Read-Only Functions
+  "function balanceOf(address owner) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)",
 
-// add logic so this server runs continuously
+  // Authenticated Functions
+  "function transfer(address to, uint amount) returns (bool)",
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
+  // Events
+  "event Transfer(address indexed from, address indexed to, uint amount)",
+];
 
+const main = async () => {
+  console.log("hi");
+  console.log(process.env.rpcUrl);
+  console.log(Date.now());
 
-for (var i = 0; i < config.length; i++)
-{   
+  // add logic so this server runs continuously
 
-    const target = config[i].account
+  const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
 
-    // const autoPilotInterface = new ethers.utils.Interface(AutoPilotABI);
-    const signer = provider.getSigner()
-    const contract = new ethers.Contract(target, AutoPilotABI, signer);    
-    
-    const abi = await ethers.utils.defaultAbiCoder;
-    
-    for (var j = 0; j < config[i].actions.length; j++)
-    {
-        console.log(config[i].actions[j]);
-        const parentCalldata = 
-        abi.encode(
-            ['bytes4', 'address', 'uint256', 'bytes'],
-            ["0xb61d27f6", config[i].actions[j].dest, config[i].actions[j].value, "0x"]
-        );
-        const op = 
-        {
-            sender : target,
-            nonce : BigNumber.from("2"),
-            initCode : "",
-            calldata : parentCalldata,
-            callGasLimit : BigNumber.from("1000000"),
-            verificationGasLimit : BigNumber.from("1000000"),
-            preVerificationGas : BigNumber.from("1000000"),
-            maxFeePerGas : BigNumber.from("1000000"),
-            maxPriorityFeePerGas : BigNumber.from("1000000"),
-            paymasterAndData : "",
-            signature: parentCalldata
-        }
+  const botAddress = await getAddress(provider);
+  const { data } = imported.nodes[2];
 
-        const client = await getHttpRpcClient(
-            provider,
-            config.bundlerUrl,
-            config.entryPoint
-        );
-        const uoHash = await client.sendUserOpToBundler(op);
-        console.log(`UserOpHash: ${uoHash}`);
-      
-        console.log("Waiting for transaction...");
-        const txHash = await accountAPI.getUserOpReceipt(uoHash);
-        console.log(`Transaction hash: ${txHash}`);
-    }
+  console.log({ botAddress });
+  // deploys bot
+  //   await transfer(ethers.constants.AddressZero, "0", provider);
 
-    // sender: PromiseOrValue<string>;
-    // nonce: PromiseOrValue<BigNumberish>;
-    // initCode: PromiseOrValue<BytesLike>;
-    // callData: PromiseOrValue<BytesLike>;
-    // callGasLimit: PromiseOrValue<BigNumberish>;
-    // verificationGasLimit: PromiseOrValue<BigNumberish>;
-    // preVerificationGas: PromiseOrValue<BigNumberish>;
-    // maxFeePerGas: PromiseOrValue<BigNumberish>;
-    // maxPriorityFeePerGas: PromiseOrValue<BigNumberish>;
-    // paymasterAndData: PromiseOrValue<BytesLike>;
-    // signature: PromiseOrValue<BytesLike>;
-}
+  const accountAPI = getSimpleAccount(
+    provider,
+    process.env.botPrivateKey,
+    process.env.entryPoint,
+    process.env.simpleAccountFactory
+  );
 
-}
-main();
+  const tkn = data.target; //goerli LINK contract
+  const token = ethers.utils.getAddress(tkn);
+  const to = ethers.utils.getAddress(data.params[0]); // eth tokyo address
+  const erc20 = new ethers.Contract(token, ERC20_ABI, provider);
 
+  const amount = data.params[1].hex;
 
-  // const op = await accountAPI.createSignedUserOp({
-    //    target,
-    //    value: 0,
-    //    data: autoPilotInterface.encodeFunctionData("execute", [config[i].]),
-    //    ...
-    //    (await getGasFee(provider)),
-    // });
-    // console.log(`Signed UserOperation: ${await printOp(op)}`);
+  const op = await accountAPI.createSignedUserOp({
+    target: erc20.address,
+    data: erc20.interface.encodeFunctionData("transfer", [to, amount]),
+    ...(await getGasFee(provider)),
+  });
+  console.log({ op });
+  console.log(`Signed UserOperation: ${await printOp(op)}`);
+
+  const client = await getHttpRpcClient(
+    provider,
+    process.env.bundlerUrl,
+    process.env.entryPoint
+  );
+  const uoHash = await client.sendUserOpToBundler(op);
+  console.log(`UserOpHash: ${uoHash}`);
+
+  console.log("Waiting for transaction...");
+  const txHash = await accountAPI.getUserOpReceipt(uoHash);
+  console.log(`Transaction hash: ${txHash}`);
+};
+await main();

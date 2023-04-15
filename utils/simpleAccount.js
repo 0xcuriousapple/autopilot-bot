@@ -3,11 +3,13 @@ import { ethers } from "ethers";
 
 export function getSimpleAccount(
   provider,
-  owner,
+  signingKey,
   entryPointAddress,
   factoryAddress,
   paymasterAPI
 ) {
+  const owner = new ethers.Wallet(signingKey, provider);
+  console.log({ owner });
   const sw = new SimpleAccountAPI({
     provider,
     entryPointAddress,
